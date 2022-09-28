@@ -19,6 +19,7 @@ const Device = sequelize.define('device', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     title: { type: DataTypes.STRING },
     price: { type: DataTypes.INTEGER },
+    oldPrice: { type: DataTypes.INTEGER, defaultValue: 0 },
     image: { type: DataTypes.STRING },
     available: { type: DataTypes.BOOLEAN, defaultValue: true },
 });
@@ -39,7 +40,8 @@ const Basket = sequelize.define('basket', {
 
 const BasketDevice = sequelize.define('basket-device', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    count: { type: DataTypes.INTEGER },
+    count: { type: DataTypes.INTEGER, defaultValue: 1 },
+    selected: { type: DataTypes.BOOLEAN, defaultValue: true },
 });
 
 const Order = sequelize.define('order', {
@@ -51,6 +53,13 @@ const Order = sequelize.define('order', {
     deliveryDate: { type: DataTypes.DATE },
     delivered: { type: DataTypes.BOOLEAN, defaultValue: false },
     canceled: { type: DataTypes.BOOLEAN, defaultValue: false },
+    hidden: { type: DataTypes.BOOLEAN, defaultValue: false },
+});
+
+const OrderDevice = sequelize.define('order-device', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    price: { type: DataTypes.INTEGER },
+    count: { type: DataTypes.INTEGER },
 });
 
 const Brand = sequelize.define('brand', {
@@ -82,7 +91,10 @@ BasketDevice.belongsTo(Device);
 User.hasMany(Order);
 Order.belongsTo(User);
 
-Basket.hasOne(Order);
-Order.belongsTo(Basket);
+Device.hasMany(OrderDevice);
+OrderDevice.belongsTo(Device);
 
-module.exports = { User, Token, Device, DeviceInfo, Basket, BasketDevice, Brand, Order, Info };
+Order.hasMany(OrderDevice);
+OrderDevice.belongsTo(Order);
+
+module.exports = { User, Token, Device, DeviceInfo, Basket, BasketDevice, Brand, Order, OrderDevice, Info };
