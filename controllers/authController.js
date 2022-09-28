@@ -1,5 +1,5 @@
 const ApiError = require('../error/ApiError');
-const { User, Basket, Token } = require('../models/models');
+const { User, Basket } = require('../models/models');
 const bcrypt = require('bcrypt');
 const tokenService = require('../services/tokenService');
 const { validationResult } = require('express-validator');

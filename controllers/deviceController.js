@@ -1,4 +1,4 @@
-const { Device, Brand, Info, DeviceInfo } = require('../models/models');
+const { Device, Brand, Info, InfoCategory } = require('../models/models');
 const uuid = require('uuid');
 const path = require('path');
 const ApiError = require('../error/ApiError');
@@ -19,11 +19,11 @@ class DeviceController {
                 device = await Device.create({ brandId: id, title, price, image: fileName });
             }
             if (info) {
-                JSON.parse(info).forEach(async (i) => {
-                    const [info, infoCreated] = await Info.findOrCreate({
-                        where: { title: i.title, content: i.content },
+                JSON.parse(info).forEach(async (c) => {
+                    const infoCategory = await InfoCategory.create({ title: c.infoCategory, deviceId: device.id });
+                    c.info.forEach(async (i) => {
+                        await Info.create({ title: i.title, content: i.content, infoCategoryId: infoCategory.id });
                     });
-                    DeviceInfo.create({ deviceId: device.id, infoId: info.dataValues.id });
                 });
             }
 
@@ -71,7 +71,7 @@ class DeviceController {
             const { id } = req.params;
             const device = await Device.findOne({
                 where: { id },
-                include: [{ model: Brand }, { model: DeviceInfo, include: { model: Info } }],
+                include: { model: InfoCategory, include: { model: Info } },
             });
 
             return res.json(device);
