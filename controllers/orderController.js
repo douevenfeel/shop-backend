@@ -35,7 +35,6 @@ class OrderController {
                 });
                 await BasketDevice.destroy({ where: { basketId: user.basketId, deviceId: findedDevice.id } });
             });
-
             order = await Order.findOne({
                 where: { id: order.id },
             });

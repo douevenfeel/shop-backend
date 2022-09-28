@@ -5,7 +5,6 @@ class BasketController {
     async getBasket(req, res, next) {
         try {
             const { basketId } = req.params;
-
             const basket = await BasketDevice.findAll({ where: { basketId }, order: [['id', 'ASC']] });
 
             return res.json(basket);
@@ -22,6 +21,7 @@ class BasketController {
                 return res.json({ message: 'device already in the basket' });
             }
             await BasketDevice.create({ basketId, deviceId });
+            
             return res.json({ message: 'device added to the basket' });
         } catch (error) {
             next(ApiError.badRequest(error.message));
