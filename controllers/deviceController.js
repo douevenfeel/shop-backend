@@ -15,8 +15,8 @@ class DeviceController {
             if (findedBrand) {
                 device = await Device.create({ brandId: findedBrand.id, title, price, image: fileName });
             } else {
-                const brand = await Brand.create({ where: { title: brandTitle } });
-                device = await Device.create({ brandId: brand.dataValues.id, title, price, image: fileName });
+                const { id } = await Brand.create({ title: brandTitle });
+                device = await Device.create({ brandId: id, title, price, image: fileName });
             }
             if (info) {
                 JSON.parse(info).forEach(async (i) => {
@@ -33,19 +33,32 @@ class DeviceController {
         }
     }
 
-    async getAll(req, res) {
+    async getAll(req, res, next) {
         try {
-            let { limit, page, orderBy, orderType } = req.query;
+            let { limit, page, orderBy, orderType, brandTitle } = req.query;
             page = page || 1;
             limit = limit || 6;
             let order = (orderBy && orderType && [orderBy, orderType]) || ['image', 'DESC'];
             order = [['available', 'DESC'], order];
             let offset = page * limit - limit;
-            const devices = await Device.findAndCountAll({
-                page,
-                limit,
-                offset,
-            });
+            let devices;
+            if (brandTitle !== undefined) {
+                const { id } = await Brand.findOne({ where: { title: brandTitle } });
+                devices = await Device.findAndCountAll({
+                    where: { brandId: id },
+                    order,
+                    page,
+                    limit,
+                    offset,
+                });
+            } else {
+                devices = await Device.findAndCountAll({
+                    order,
+                    page,
+                    limit,
+                    offset,
+                });
+            }
 
             return res.json(devices);
         } catch (error) {
@@ -53,7 +66,7 @@ class DeviceController {
         }
     }
 
-    async getOne(req, res) {
+    async getOne(req, res, next) {
         try {
             const { id } = req.params;
             const device = await Device.findOne({
