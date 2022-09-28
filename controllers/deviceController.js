@@ -204,6 +204,17 @@ class DeviceController {
             next(ApiError.badRequest(error.message));
         }
     }
+
+    async removeInfo(req, res, next) {
+        try {
+            const { infoId } = req.params;
+            await Info.destroy({ where: { id: infoId } });
+
+            return res.json({ message: 'info deleted' });
+        } catch (error) {
+            next(ApiError.badRequest(error.message));
+        }
+    }
 }
 
 module.exports = new DeviceController();
