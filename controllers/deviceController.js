@@ -71,10 +71,34 @@ class DeviceController {
             const { id } = req.params;
             const device = await Device.findOne({
                 where: { id },
-                include: { model: InfoCategory, include: { model: Info } },
+                include: { model: InfoCategory, include: { model: Info, order: [['info-categories.id', 'ASC']] } },
             });
 
             return res.json(device);
+        } catch (error) {
+            next(ApiError.badRequest(error.message));
+        }
+    }
+
+    async addCategory(req, res, next) {
+        try {
+            const { deviceId } = req.params;
+            const { infoCategoryTitle } = req.body;
+            const infoCategory = await InfoCategory.create({ deviceId, title: infoCategoryTitle });
+
+            return res.json(infoCategory);
+        } catch (error) {
+            next(ApiError.badRequest(error.message));
+        }
+    }
+
+    async addInfo(req, res, next) {
+        try {
+            const { infoCategoryId } = req.params;
+            const { title, content } = req.body;
+            const info = await Info.create({ title, content, infoCategoryId });
+
+            return res.json(info);
         } catch (error) {
             next(ApiError.badRequest(error.message));
         }
@@ -141,12 +165,41 @@ class DeviceController {
         }
     }
 
+    async updateCategoryTitle(req, res, next) {
+        try {
+            const { infoCategoryId } = req.params;
+            const { infoCategoryTitle } = req.body;
+            await InfoCategory.update({ title: infoCategoryTitle }, { where: { id: infoCategoryId } });
+
+            return res.json({ message: 'info category title updated' });
+        } catch (error) {
+            next(ApiError.badRequest(error.message));
+        }
+    }
+
     async remove(req, res, next) {
         try {
             const { id } = req.params;
+            const infoCategory = await InfoCategory.findAll({ where: { deviceId: id } });
+            infoCategory.forEach(async (ic) => {
+                await Info.destroy({ where: { infoCategoryId: ic.id } });
+            });
+            await InfoCategory.destroy({ where: { deviceId: id } });
             await Device.destroy({ where: { id } });
 
             return res.json({ message: 'Товар удален' });
+        } catch (error) {
+            next(ApiError.badRequest(error.message));
+        }
+    }
+
+    async removeCategory(req, res, next) {
+        try {
+            const { infoCategoryId } = req.params;
+            await Info.destroy({ where: { infoCategoryId } });
+            await InfoCategory.destroy({ where: { id: infoCategoryId } });
+
+            return res.json({ message: 'info category deleted' });
         } catch (error) {
             next(ApiError.badRequest(error.message));
         }
