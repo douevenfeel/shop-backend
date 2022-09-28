@@ -74,7 +74,7 @@ class DeviceController {
         try {
             const { id } = req.params;
             const { available } = req.body;
-            const device = await Device.update({ available: available }, { where: { id } });
+            await Device.update({ available: available }, { where: { id } });
 
             return res.json({ message: 'Доступность товара изменена' });
         } catch (error) {
@@ -89,6 +89,43 @@ class DeviceController {
             await Device.update({ price: price }, { where: { id } });
 
             return res.json({ message: 'Стоимость товара обновлена' });
+        } catch (error) {
+            next(ApiError.badRequest(error.message));
+        }
+    }
+
+    async addDiscount(req, res, next) {
+        try {
+            const { id } = req.params;
+            const { price } = req.body;
+            const device = await Device.findOne({ where: { id } });
+            await Device.update({ price, oldPrice: device.price }, { where: { id } });
+
+            return res.json({ message: 'device discount added' });
+        } catch (error) {
+            next(ApiError.badRequest(error.message));
+        }
+    }
+
+    async updateDiscount(req, res, next) {
+        try {
+            const { id } = req.params;
+            const { price } = req.body;
+            await Device.update({ price }, { where: { id } });
+
+            return res.json({ message: 'device discount updated' });
+        } catch (error) {
+            next(ApiError.badRequest(error.message));
+        }
+    }
+
+    async removeDiscount(req, res, next) {
+        try {
+            const { id } = req.params;
+            const device = await Device.findOne({ where: { id } });
+            await Device.update({ price: device.oldPrice, oldPrice: 0 }, { where: { id } });
+
+            return res.json({ message: 'device discount removed' });
         } catch (error) {
             next(ApiError.badRequest(error.message));
         }
