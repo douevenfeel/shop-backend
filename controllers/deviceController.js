@@ -8,10 +8,8 @@ class DeviceController {
         try {
             const { brandTitle, title, price, info } = req.body;
             const { image } = req.files;
-
             let fileName = uuid.v4() + '.png';
             image.mv(path.resolve(__dirname, '..', 'static', fileName));
-
             const findedBrand = await Brand.findOne({ where: { title: brandTitle } });
             let device;
             if (findedBrand) {
@@ -20,7 +18,6 @@ class DeviceController {
                 const brand = await Brand.create({ where: { title: brandTitle } });
                 device = await Device.create({ brandId: brand.dataValues.id, title, price, image: fileName });
             }
-
             if (info) {
                 JSON.parse(info).forEach(async (i) => {
                     const [info, infoCreated] = await Info.findOrCreate({
@@ -45,9 +42,9 @@ class DeviceController {
             order = [['available', 'DESC'], order];
             let offset = page * limit - limit;
             const devices = await Device.findAndCountAll({
+                page,
                 limit,
                 offset,
-                order,
             });
 
             return res.json(devices);

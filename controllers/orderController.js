@@ -48,40 +48,38 @@ class OrderController {
 
     async getAllAdmin(req, res, next) {
         try {
-            let { limit, page } = req.query;
+            let { limit, page, canceled, delivered } = req.query;
             page = page || 1;
             limit = limit || 6;
             let offset = page * limit - limit;
-            const orders = await Order.findAndCountAll({ page, limit, offset });
-
-            return res.json(orders);
-        } catch (error) {
-            next(ApiError.badRequest(error.message));
-        }
-    }
-
-    async getDeliveredAdmin(req, res, next) {
-        try {
-            let { limit, page } = req.query;
-            page = page || 1;
-            limit = limit || 6;
-            let offset = page * limit - limit;
-            const orders = await Order.findAndCountAll({ where: { delivered: true }, page, limit, offset });
-
-            return res.json(orders);
-        } catch (error) {
-            next(ApiError.badRequest(error.message));
-        }
-    }
-
-    async getCanceledAdmin(req, res, next) {
-        try {
-            let { limit, page } = req.query;
-            page = page || 1;
-            limit = limit || 6;
-            let offset = page * limit - limit;
-            const orders = await Order.findAndCountAll({ where: { canceled: true }, page, limit, offset });
-
+            let orders;
+            if (canceled && delivered) {
+                return next(ApiError.badRequest('error'));
+            }
+            if (!canceled && !delivered) {
+                orders = await Order.findAndCountAll({
+                    order: [['orderDate', 'DESC']],
+                    page,
+                    limit,
+                    offset,
+                });
+            } else if (canceled) {
+                orders = await Order.findAndCountAll({
+                    where: { canceled },
+                    order: [['orderDate', 'DESC']],
+                    page,
+                    limit,
+                    offset,
+                });
+            } else if (delivered) {
+                orders = await Order.findAndCountAll({
+                    where: { delivered },
+                    order: [['orderDate', 'DESC']],
+                    page,
+                    limit,
+                    offset,
+                });
+            }
             return res.json(orders);
         } catch (error) {
             next(ApiError.badRequest(error.message));
@@ -91,18 +89,39 @@ class OrderController {
     async getAll(req, res, next) {
         try {
             const { userId } = req.params;
-            let { limit, page } = req.query;
+            let { limit, page, canceled, delivered } = req.query;
             page = page || 1;
             limit = limit || 6;
             let offset = page * limit - limit;
-
-            const orders = await Order.findAndCountAll({
-                where: { userId, hidden: false },
-                order: [['orderDate', 'DESC']],
-                limit,
-                offset,
-            });
-
+            let orders;
+            if (canceled && delivered) {
+                return next(ApiError.badRequest('error'));
+            }
+            if (!canceled && !delivered) {
+                orders = await Order.findAndCountAll({
+                    where: { userId, hidden: false },
+                    order: [['orderDate', 'DESC']],
+                    page,
+                    limit,
+                    offset,
+                });
+            } else if (canceled) {
+                orders = await Order.findAndCountAll({
+                    where: { userId, hidden: false, canceled },
+                    order: [['orderDate', 'DESC']],
+                    page,
+                    limit,
+                    offset,
+                });
+            } else if (delivered) {
+                orders = await Order.findAndCountAll({
+                    where: { userId, hidden: false, delivered },
+                    order: [['orderDate', 'DESC']],
+                    page,
+                    limit,
+                    offset,
+                });
+            }
             return res.json(orders);
         } catch (error) {
             next(ApiError.badRequest(error.message));
@@ -118,34 +137,6 @@ class OrderController {
             }
 
             return res.json(order);
-        } catch (error) {
-            next(ApiError.badRequest(error.message));
-        }
-    }
-
-    async getDelivered(req, res, next) {
-        try {
-            const { userId } = req.params;
-            const orders = await Order.findAll({
-                where: { userId, delivered: true, hidden: false },
-                order: [['orderDate', 'DESC']],
-            });
-
-            return res.json(orders);
-        } catch (error) {
-            next(ApiError.badRequest(error.message));
-        }
-    }
-
-    async getCanceled(req, res, next) {
-        try {
-            const { userId } = req.params;
-            const orders = await Order.findAll({
-                where: { userId, canceled: true, hidden: false },
-                order: [['orderDate', 'DESC']],
-            });
-
-            return res.json(orders);
         } catch (error) {
             next(ApiError.badRequest(error.message));
         }
