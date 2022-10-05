@@ -37,10 +37,6 @@ const Info = sequelize.define('info', {
 
 const Basket = sequelize.define('basket', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-});
-
-const BasketDevice = sequelize.define('basket-device', {
-    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     count: { type: DataTypes.INTEGER, defaultValue: 1 },
     selected: { type: DataTypes.BOOLEAN, defaultValue: true },
 });
@@ -71,8 +67,8 @@ const Brand = sequelize.define('brand', {
 User.hasOne(Token);
 Token.belongsTo(User);
 
-Basket.hasOne(User);
-User.belongsTo(Basket);
+User.hasOne(Basket);
+Basket.belongsTo(User);
 
 Brand.hasMany(Device);
 Device.belongsTo(Brand);
@@ -83,11 +79,8 @@ InfoCategory.belongsTo(Device);
 InfoCategory.hasMany(Info);
 Info.belongsTo(InfoCategory);
 
-Basket.hasMany(BasketDevice);
-BasketDevice.belongsTo(Basket);
-
-Device.hasMany(BasketDevice);
-BasketDevice.belongsTo(Device);
+Device.hasMany(Basket);
+Basket.belongsTo(Device);
 
 User.hasMany(Order);
 Order.belongsTo(User);
@@ -106,7 +99,6 @@ module.exports = {
     InfoCategory,
     Info,
     Basket,
-    BasketDevice,
     Order,
     OrderDevice,
 };

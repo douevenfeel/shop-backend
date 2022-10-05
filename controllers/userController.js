@@ -23,6 +23,5 @@ class UserController {
             next(ApiError.badRequest(error.message));
         }
     }
-
 }
 module.exports = new UserController();

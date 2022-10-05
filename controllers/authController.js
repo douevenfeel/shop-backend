@@ -1,5 +1,5 @@
 const ApiError = require('../error/ApiError');
-const { User, Basket } = require('../models/models');
+const { User } = require('../models/models');
 const bcrypt = require('bcrypt');
 const tokenService = require('../services/tokenService');
 const { validationResult } = require('express-validator');
@@ -17,8 +17,7 @@ class AuthController {
                 return next(ApiError.badRequest('user already exists'));
             }
             const hashPassword = await bcrypt.hash(password, 5);
-            const basket = await Basket.create();
-            const user = await User.create({ email, password: hashPassword, firstName, lastName, basketId: basket.id });
+            const user = await User.create({ email, password: hashPassword, firstName, lastName });
             const tokens = tokenService.generateTokens({
                 id: user.id,
                 email: user.email,

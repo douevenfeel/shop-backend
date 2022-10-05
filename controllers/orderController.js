@@ -1,5 +1,5 @@
 const ApiError = require('../error/ApiError');
-const { User, BasketDevice, Device, Order, OrderDevice } = require('../models/models');
+const { User, Device, Order, OrderDevice, Basket } = require('../models/models');
 
 class OrderController {
     async create(req, res, next) {
@@ -10,11 +10,11 @@ class OrderController {
             const user = await User.findOne({ where: { id } });
             receiverFirstName = receiverFirstName || user.firstName;
             receiverLastName = receiverLastName || user.lastName;
-            const basketDevice = await BasketDevice.findAll({ where: { basketId: user.basketId, selected: true } });
+            const basket = await Basket.findAll({ where: { userId: user.id, selected: true } });
             const orderDate = new Date();
             let deliveryDate = new Date();
             deliveryDate = deliveryDate.setDate(deliveryDate.getDate() + 2);
-            if (basketDevice.length === 0) {
+            if (basket.length === 0) {
                 return res.json({ message: 'empty basket' });
             }
             let order = await Order.create({
@@ -25,7 +25,7 @@ class OrderController {
                 orderDate: orderDate,
                 deliveryDate,
             });
-            basketDevice.forEach(async (device) => {
+            basket.forEach(async (device) => {
                 const findedDevice = await Device.findOne({ where: { id: device.deviceId } });
                 await OrderDevice.create({
                     orderId: order.id,
@@ -33,7 +33,7 @@ class OrderController {
                     count: device.count,
                     price: findedDevice.price,
                 });
-                await BasketDevice.destroy({ where: { basketId: user.basketId, deviceId: findedDevice.id } });
+                await Basket.destroy({ where: { userId: user.id, deviceId: findedDevice.id } });
             });
             order = await Order.findOne({
                 where: { id: order.id },

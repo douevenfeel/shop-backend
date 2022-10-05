@@ -1,11 +1,11 @@
-const { BasketDevice } = require('../models/models');
+const { Basket } = require('../models/models');
 const ApiError = require('../error/ApiError');
 
 class BasketController {
     async getBasket(req, res, next) {
         try {
-            const { basketId } = req.params;
-            const basket = await BasketDevice.findAll({ where: { basketId }, order: [['id', 'ASC']] });
+            const { userId } = req.params;
+            const basket = await Basket.findAll({ where: { userId }, order: [['id', 'ASC']] });
 
             return res.json(basket);
         } catch (error) {
@@ -15,13 +15,13 @@ class BasketController {
 
     async addDevice(req, res, next) {
         try {
-            const { basketId, deviceId } = req.body;
-            const basketDevice = await BasketDevice.findOne({ where: { basketId, deviceId } });
-            if (basketDevice) {
+            const { deviceId, userId } = req.body;
+            const basket = await Basket.findOne({ where: { userId, deviceId } });
+            if (basket) {
                 return res.json({ message: 'device already in the basket' });
             }
-            await BasketDevice.create({ basketId, deviceId });
-            
+            await Basket.create({ userId, deviceId });
+
             return res.json({ message: 'device added to the basket' });
         } catch (error) {
             next(ApiError.badRequest(error.message));
@@ -30,14 +30,14 @@ class BasketController {
 
     async changeCount(req, res, next) {
         try {
-            const { basketId } = req.params;
+            const { userId } = req.params;
             const { count, deviceId } = req.body;
             if (count === 0) {
-                await BasketDevice.destroy({ where: { basketId, deviceId } });
+                await Basket.destroy({ where: { userId, deviceId } });
 
                 return res.json({ message: 'device deleted from the basket' });
             }
-            await BasketDevice.update({ count }, { where: { basketId, deviceId } });
+            await Basket.update({ count }, { where: { userId, deviceId } });
 
             return res.json({ message: "device's count changed" });
         } catch (error) {
@@ -47,9 +47,9 @@ class BasketController {
 
     async changeSelected(req, res, next) {
         try {
-            const { basketId } = req.params;
+            const { userId } = req.params;
             const { deviceId, selected } = req.body;
-            await BasketDevice.update({ selected }, { where: { basketId, deviceId } });
+            await Basket.update({ selected }, { where: { userId, deviceId } });
 
             return res.json({ message: 'device deleted from selected' });
         } catch (error) {
@@ -59,9 +59,9 @@ class BasketController {
 
     async remove(req, res, next) {
         try {
-            const { basketId } = req.params;
+            const { userId } = req.params;
             const { deviceId } = req.body;
-            await BasketDevice.destroy({ where: { basketId, deviceId } });
+            await Basket.destroy({ where: { userId, deviceId } });
 
             return res.json({ message: 'device deleted from the basket' });
         } catch (error) {
