@@ -24,7 +24,7 @@ const Device = sequelize.define('device', {
     available: { type: DataTypes.BOOLEAN, defaultValue: true },
 });
 
-const InfoCategory = sequelize.define('info-category', {
+const Category = sequelize.define('category', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     title: { type: DataTypes.STRING },
 });
@@ -53,7 +53,7 @@ const Order = sequelize.define('order', {
     hidden: { type: DataTypes.BOOLEAN, defaultValue: false },
 });
 
-const OrderDevice = sequelize.define('order-device', {
+const OrderDevice = sequelize.define('orderDevice', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     price: { type: DataTypes.INTEGER },
     count: { type: DataTypes.INTEGER },
@@ -73,11 +73,11 @@ Basket.belongsTo(User);
 Brand.hasMany(Device);
 Device.belongsTo(Brand);
 
-Device.hasMany(InfoCategory);
-InfoCategory.belongsTo(Device);
+Device.hasMany(Category);
+Category.belongsTo(Device);
 
-InfoCategory.hasMany(Info);
-Info.belongsTo(InfoCategory);
+Category.hasMany(Info);
+Info.belongsTo(Category);
 
 Device.hasMany(Basket);
 Basket.belongsTo(Device);
@@ -96,7 +96,7 @@ module.exports = {
     Token,
     Device,
     Brand,
-    InfoCategory,
+    Category,
     Info,
     Basket,
     Order,

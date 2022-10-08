@@ -1,4 +1,4 @@
-const { Device, Brand, Info, InfoCategory } = require('../models/models');
+const { Device, Brand, Info, Category } = require('../models/models');
 const uuid = require('uuid');
 const path = require('path');
 const ApiError = require('../error/ApiError');
@@ -20,9 +20,9 @@ class DeviceController {
             }
             if (info) {
                 JSON.parse(info).forEach(async (c) => {
-                    const infoCategory = await InfoCategory.create({ title: c.infoCategory, deviceId: device.id });
+                    const category = await Category.create({ title: c.category, deviceId: device.id });
                     c.info.forEach(async (i) => {
-                        await Info.create({ title: i.title, content: i.content, infoCategoryId: infoCategory.id });
+                        await Info.create({ title: i.title, content: i.content, categoryId: category.id });
                     });
                 });
             }
@@ -35,14 +35,14 @@ class DeviceController {
 
     async getAll(req, res, next) {
         try {
-            let { limit, page, orderBy, orderType, brandTitle } = req.query;
+            let { page, limit, order, brandTitle } = req.query;
             page = page || 1;
-            limit = limit || 6;
-            let order = (orderBy && orderType && [orderBy, orderType]) || ['image', 'DESC'];
+            limit = limit || 12;
             order = [['available', 'DESC'], order];
             let offset = page * limit - limit;
             let devices;
-            if (brandTitle !== undefined) {
+            brandTitle = brandTitle || 'all';
+            if (brandTitle !== 'all') {
                 const { id } = await Brand.findOne({ where: { title: brandTitle } });
                 devices = await Device.findAndCountAll({
                     where: { brandId: id },
@@ -50,6 +50,7 @@ class DeviceController {
                     page,
                     limit,
                     offset,
+                    include: { model: Brand },
                 });
             } else {
                 devices = await Device.findAndCountAll({
@@ -57,6 +58,7 @@ class DeviceController {
                     page,
                     limit,
                     offset,
+                    include: { model: Brand },
                 });
             }
 
@@ -71,7 +73,7 @@ class DeviceController {
             const { id } = req.params;
             const device = await Device.findOne({
                 where: { id },
-                include: { model: InfoCategory, include: { model: Info, order: [['info-categories.id', 'ASC']] } },
+                include: [{ model: Brand }, { model: Category, include: { model: Info } }],
             });
 
             return res.json(device);
@@ -83,10 +85,10 @@ class DeviceController {
     async addCategory(req, res, next) {
         try {
             const { deviceId } = req.params;
-            const { infoCategoryTitle } = req.body;
-            const infoCategory = await InfoCategory.create({ deviceId, title: infoCategoryTitle });
+            const { categoryTitle } = req.body;
+            const category = await Category.create({ deviceId, title: categoryTitle });
 
-            return res.json(infoCategory);
+            return res.json(category);
         } catch (error) {
             next(ApiError.badRequest(error.message));
         }
@@ -94,9 +96,9 @@ class DeviceController {
 
     async addInfo(req, res, next) {
         try {
-            const { infoCategoryId } = req.params;
+            const { categoryId } = req.params;
             const { title, content } = req.body;
-            const info = await Info.create({ title, content, infoCategoryId });
+            const info = await Info.create({ title, content, categoryId });
 
             return res.json(info);
         } catch (error) {
@@ -167,9 +169,9 @@ class DeviceController {
 
     async updateCategoryTitle(req, res, next) {
         try {
-            const { infoCategoryId } = req.params;
-            const { infoCategoryTitle } = req.body;
-            await InfoCategory.update({ title: infoCategoryTitle }, { where: { id: infoCategoryId } });
+            const { categoryId } = req.params;
+            const { categoryTitle } = req.body;
+            await Category.update({ title: categoryTitle }, { where: { id: categoryId } });
 
             return res.json({ message: 'info category title updated' });
         } catch (error) {
@@ -180,11 +182,11 @@ class DeviceController {
     async remove(req, res, next) {
         try {
             const { id } = req.params;
-            const infoCategory = await InfoCategory.findAll({ where: { deviceId: id } });
-            infoCategory.forEach(async (ic) => {
-                await Info.destroy({ where: { infoCategoryId: ic.id } });
+            const category = await Category.findAll({ where: { deviceId: id } });
+            category.forEach(async (ic) => {
+                await Info.destroy({ where: { categoryId: ic.id } });
             });
-            await InfoCategory.destroy({ where: { deviceId: id } });
+            await Category.destroy({ where: { deviceId: id } });
             await Device.destroy({ where: { id } });
 
             return res.json({ message: 'Товар удален' });
@@ -195,9 +197,9 @@ class DeviceController {
 
     async removeCategory(req, res, next) {
         try {
-            const { infoCategoryId } = req.params;
-            await Info.destroy({ where: { infoCategoryId } });
-            await InfoCategory.destroy({ where: { id: infoCategoryId } });
+            const { categoryId } = req.params;
+            await Info.destroy({ where: { categoryId } });
+            await Category.destroy({ where: { id: categoryId } });
 
             return res.json({ message: 'info category deleted' });
         } catch (error) {
