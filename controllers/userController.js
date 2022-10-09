@@ -14,7 +14,7 @@ class UserController {
                 },
             });
             if (user) {
-                return res.json('admin already created');
+                return res.json('hello world');
             }
             await User.create({
                 email: process.env.ADMIN_EMAIL,
@@ -23,6 +23,7 @@ class UserController {
                 lastName: process.env.ADMIN_LASTNAME,
                 role: 'ADMIN',
             });
+
             return res.json('admin created');
         } catch (error) {
             next(ApiError.badRequest(error.message));

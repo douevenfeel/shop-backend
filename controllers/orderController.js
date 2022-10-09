@@ -8,15 +8,15 @@ class OrderController {
             const { address } = req.body;
             const userId = req.userId;
             const user = await User.findOne({ where: { id: userId } });
-            receiverFirstName = receiverFirstName || user.firstName;
-            receiverLastName = receiverLastName || user.lastName;
             const basket = await Basket.findAll({ where: { userId: user.id, selected: true } });
-            const orderDate = new Date();
-            let deliveryDate = new Date();
-            deliveryDate = deliveryDate.setDate(deliveryDate.getDate() + 2);
             if (basket.length === 0) {
                 return res.json({ message: 'empty basket' });
             }
+            receiverFirstName = receiverFirstName || user.firstName;
+            receiverLastName = receiverLastName || user.lastName;
+            const orderDate = new Date();
+            let deliveryDate = new Date();
+            deliveryDate = deliveryDate.setDate(deliveryDate.getDate() + 2);
             let order = await Order.create({
                 address,
                 receiverFirstName,
@@ -33,10 +33,7 @@ class OrderController {
                     count: device.count,
                     price: findedDevice.price,
                 });
-                await Basket.destroy({ where: { userId: user.id, deviceId: findedDevice.id } });
-            });
-            order = await Order.findOne({
-                where: { id: order.id },
+                await Basket.destroy({ where: { userId, deviceId: findedDevice.id } });
             });
 
             return res.json(order);
@@ -47,38 +44,31 @@ class OrderController {
 
     async getAllAdmin(req, res, next) {
         try {
-            let { limit, page, canceled, delivered } = req.query;
+            let { limit, page, canceled, delivered, userId } = req.query;
             page = page || 1;
             limit = limit || 6;
             let offset = page * limit - limit;
-            let orders;
-            if (canceled && delivered) {
+            if (!!canceled === true && !!delivered === true) {
                 return next(ApiError.badRequest('error'));
             }
-            if (!canceled && !delivered) {
-                orders = await Order.findAndCountAll({
-                    order: [['orderDate', 'DESC']],
-                    page,
-                    limit,
-                    offset,
-                });
-            } else if (canceled) {
-                orders = await Order.findAndCountAll({
-                    where: { canceled },
-                    order: [['orderDate', 'DESC']],
-                    page,
-                    limit,
-                    offset,
-                });
-            } else if (delivered) {
-                orders = await Order.findAndCountAll({
-                    where: { delivered },
-                    order: [['orderDate', 'DESC']],
-                    page,
-                    limit,
-                    offset,
-                });
+            const params = {};
+            if (canceled !== undefined) {
+                params.canceled = canceled;
             }
+            if (delivered !== undefined) {
+                params.delivered = delivered;
+            }
+            if (userId !== undefined) {
+                params.userId = userId;
+            }
+            const orders = await Order.findAndCountAll({
+                where: { ...params },
+                order: [['orderDate', 'DESC']],
+                page,
+                limit,
+                offset,
+            });
+
             return res.json(orders);
         } catch (error) {
             next(ApiError.badRequest(error.message));
@@ -92,35 +82,25 @@ class OrderController {
             page = page || 1;
             limit = limit || 6;
             let offset = page * limit - limit;
-            let orders;
-            if (canceled && delivered) {
+            if (!!canceled === true && !!delivered === true) {
                 return next(ApiError.badRequest('error'));
             }
-            if (!canceled && !delivered) {
-                orders = await Order.findAndCountAll({
-                    where: { userId, hidden: false },
-                    order: [['orderDate', 'DESC']],
-                    page,
-                    limit,
-                    offset,
-                });
-            } else if (canceled) {
-                orders = await Order.findAndCountAll({
-                    where: { userId, hidden: false, canceled },
-                    order: [['orderDate', 'DESC']],
-                    page,
-                    limit,
-                    offset,
-                });
-            } else if (delivered) {
-                orders = await Order.findAndCountAll({
-                    where: { userId, hidden: false, delivered },
-                    order: [['orderDate', 'DESC']],
-                    page,
-                    limit,
-                    offset,
-                });
+            const params = { hidden: false, userId };
+            if (canceled !== undefined) {
+                params.canceled = canceled;
             }
+            if (delivered !== undefined) {
+                params.delivered = delivered;
+            }
+
+            const orders = await Order.findAndCountAll({
+                where: { ...params },
+                order: [['orderDate', 'DESC']],
+                page,
+                limit,
+                offset,
+            });
+
             return res.json(orders);
         } catch (error) {
             next(ApiError.badRequest(error.message));
@@ -163,9 +143,8 @@ class OrderController {
 
     async delivery(req, res, next) {
         try {
-            const userId = req.userId;
             const { id } = req.body;
-            const order = await Order.findOne({ where: { id, userId } });
+            const order = await Order.findOne({ where: { id } });
             if (!order) {
                 return next(ApiError.badRequest("order doesn't exist"));
             }

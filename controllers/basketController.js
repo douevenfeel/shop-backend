@@ -21,6 +21,7 @@ class BasketController {
             if (basket) {
                 basket.count++;
                 basket.save();
+
                 return res.json({ message: "device's count increased" });
             }
             await Basket.create({ userId, deviceId });
