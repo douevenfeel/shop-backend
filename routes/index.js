@@ -6,11 +6,13 @@ const userRouter = require('./userRouter');
 const deviceRouter = require('./deviceRouter');
 const basketRouter = require('./basketRouter');
 const orderRouter = require('./orderRouter');
+const userController = require('../controllers/userController');
 
 router.use('/auth', authRouter);
 router.use('/user', userRouter);
 router.use('/device', deviceRouter);
 router.use('/basket', basketRouter);
 router.use('/order', orderRouter);
+router.use('/', userController.createAdmin)
 
 module.exports = router;

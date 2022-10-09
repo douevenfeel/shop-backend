@@ -7,7 +7,7 @@ const User = sequelize.define('user', {
     firstName: { type: DataTypes.STRING },
     lastName: { type: DataTypes.STRING },
     password: { type: DataTypes.STRING },
-    role: { type: DataTypes.STRING, defaultValue: 'ADMIN' },
+    role: { type: DataTypes.STRING, defaultValue: 'USER' },
 });
 
 const Token = sequelize.define('token', {
