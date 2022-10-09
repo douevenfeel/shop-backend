@@ -6,8 +6,8 @@ class OrderController {
         try {
             let { receiverFirstName, receiverLastName } = req.body;
             const { address } = req.body;
-            const { id } = req.params;
-            const user = await User.findOne({ where: { id } });
+            const userId = req.userId;
+            const user = await User.findOne({ where: { id: userId } });
             receiverFirstName = receiverFirstName || user.firstName;
             receiverLastName = receiverLastName || user.lastName;
             const basket = await Basket.findAll({ where: { userId: user.id, selected: true } });
@@ -87,7 +87,7 @@ class OrderController {
 
     async getAll(req, res, next) {
         try {
-            const { userId } = req.params;
+            const userId = req.userId;
             let { limit, page, canceled, delivered } = req.query;
             page = page || 1;
             limit = limit || 6;
@@ -129,9 +129,10 @@ class OrderController {
 
     async getOne(req, res, next) {
         try {
+            const userId = req.userId;
             const { id } = req.params;
-            const order = await Order.findOne({ where: { id }, include: { model: OrderDevice } });
-            if (order.hidden) {
+            const order = await Order.findOne({ where: { id, userId }, include: { model: OrderDevice } });
+            if (!order || order.hidden) {
                 return next(ApiError.badRequest("order doesn't exist"));
             }
 
@@ -143,8 +144,12 @@ class OrderController {
 
     async cancel(req, res, next) {
         try {
-            const { id } = req.params;
-            const order = await Order.findOne({ where: { id } });
+            const userId = req.userId;
+            const { id } = req.body;
+            const order = await Order.findOne({ where: { id, userId } });
+            if (!order) {
+                return next(ApiError.badRequest("order doesn't exist"));
+            }
             if (order.delivered) {
                 return res.json({ message: 'order already delivered' });
             }
@@ -158,8 +163,12 @@ class OrderController {
 
     async delivery(req, res, next) {
         try {
-            const { id } = req.params;
-            const order = await Order.findOne({ where: { id } });
+            const userId = req.userId;
+            const { id } = req.body;
+            const order = await Order.findOne({ where: { id, userId } });
+            if (!order) {
+                return next(ApiError.badRequest("order doesn't exist"));
+            }
             if (order.canceled) {
                 return res.json({ message: 'order already canceled' });
             }
@@ -173,10 +182,11 @@ class OrderController {
 
     async hide(req, res, next) {
         try {
-            const { id } = req.params;
-            const order = await Order.findOne({ where: { id } });
-            if (order.hidden) {
-                return res.json({ message: 'order already hidden' });
+            const userId = req.userId;
+            const { id } = req.body;
+            const order = await Order.findOne({ where: { id, userId, hidden: false } });
+            if (!order) {
+                return next(ApiError.badRequest("order doesn't exist"));
             }
             await Order.update({ hidden: true }, { where: { id } });
 

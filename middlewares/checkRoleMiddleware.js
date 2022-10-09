@@ -1,4 +1,5 @@
 const ApiError = require('../error/ApiError');
+const { User } = require('../models/models');
 const tokenService = require('../services/tokenService');
 
 module.exports = function (role) {
@@ -13,13 +14,16 @@ module.exports = function (role) {
             }
             const validToken = tokenService.validateRefreshToken(refreshToken);
             const findedToken = await tokenService.findToken(refreshToken);
+            const user = await User.findOne({ where: { id: findedToken.dataValues.userId } });
+            if (!user) {
+                return next(ApiError.internal('error'));
+            }
             if (!validToken || !findedToken) {
                 return next(ApiError.unauthorizedError());
             }
-            if (findedToken.role !== role) {
-                return next(ApiError.forbidden('forbidden'));
+            if (user.dataValues.role !== role) {
+                return next(ApiError.forbidden());
             }
-            req.token = findedToken;
             next();
         } catch (e) {
             return next(ApiError.unauthorizedError());

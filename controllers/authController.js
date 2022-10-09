@@ -83,7 +83,6 @@ class AuthController {
             if (!refreshToken) {
                 return next(ApiError.unauthorizedError());
             }
-            console.log(true, refreshToken);
             const validToken = tokenService.validateRefreshToken(refreshToken);
             const findedToken = await tokenService.findToken(refreshToken);
             if (!validToken || !findedToken) {

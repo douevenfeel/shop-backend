@@ -2,14 +2,15 @@ const Router = require('express');
 const router = new Router();
 
 const basketController = require('../controllers/basketController');
+const authMiddleware = require('../middlewares/authMiddleware');
 
-router.get('/:userId', basketController.getBasket);
+router.get('/', authMiddleware, basketController.getBasket);
 
-router.post('/', basketController.addDevice);
+router.post('/', authMiddleware, basketController.addDevice);
 
-router.put('/:userId', basketController.changeCount);
-router.put('/:userId/selected', basketController.changeSelected);
+router.put('/', authMiddleware,basketController.changeCount);
+router.put('/selected',authMiddleware, basketController.changeSelected);
 
-router.delete('/:userId', basketController.remove);
+router.delete('/',authMiddleware, basketController.remove);
 
 module.exports = router;

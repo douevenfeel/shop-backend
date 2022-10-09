@@ -2,9 +2,11 @@ const Router = require('express');
 const router = new Router();
 
 const userController = require('../controllers/userController');
+const authMiddleware = require('../middlewares/authMiddleware');
+const checkRoleMiddleware = require('../middlewares/checkRoleMiddleware');
 
-router.get('/', userController.getAll);
+router.get('/', authMiddleware, checkRoleMiddleware('ADMIN'), userController.getAll);
 
-router.put('/:id/role', userController.updateRole);
+router.put('/:id/role', authMiddleware, checkRoleMiddleware('ADMIN'), userController.updateRole);
 
 module.exports = router;

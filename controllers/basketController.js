@@ -4,7 +4,7 @@ const ApiError = require('../error/ApiError');
 class BasketController {
     async getBasket(req, res, next) {
         try {
-            const { userId } = req.params;
+            const userId = req.userId;
             const basket = await Basket.findAll({ where: { userId }, order: [['id', 'ASC']] });
 
             return res.json(basket);
@@ -15,10 +15,13 @@ class BasketController {
 
     async addDevice(req, res, next) {
         try {
-            const { deviceId, userId } = req.body;
+            const userId = req.userId;
+            const { deviceId } = req.body;
             const basket = await Basket.findOne({ where: { userId, deviceId } });
             if (basket) {
-                return res.json({ message: 'device already in the basket' });
+                basket.count++;
+                basket.save();
+                return res.json({ message: "device's count increased" });
             }
             await Basket.create({ userId, deviceId });
 
@@ -30,8 +33,12 @@ class BasketController {
 
     async changeCount(req, res, next) {
         try {
-            const { userId } = req.params;
+            const userId = req.userId;
             const { count, deviceId } = req.body;
+            const basket = await Basket.findOne({ where: { userId, deviceId } });
+            if (!basket) {
+                return res.json({ message: 'no device in the basket' });
+            }
             if (count === 0) {
                 await Basket.destroy({ where: { userId, deviceId } });
 
@@ -47,8 +54,12 @@ class BasketController {
 
     async changeSelected(req, res, next) {
         try {
-            const { userId } = req.params;
+            const userId = req.userId;
             const { deviceId, selected } = req.body;
+            const basket = await Basket.findOne({ where: { userId, deviceId } });
+            if (!basket) {
+                return res.json({ message: 'no device in the basket' });
+            }
             await Basket.update({ selected }, { where: { userId, deviceId } });
 
             return res.json({ message: 'device deleted from selected' });
@@ -59,8 +70,12 @@ class BasketController {
 
     async remove(req, res, next) {
         try {
-            const { userId } = req.params;
+            const userId = req.userId;
             const { deviceId } = req.body;
+            const basket = await Basket.findOne({ where: { userId, deviceId } });
+            if (!basket) {
+                return res.json({ message: 'no device in the basket' });
+            }
             await Basket.destroy({ where: { userId, deviceId } });
 
             return res.json({ message: 'device deleted from the basket' });

@@ -5,6 +5,7 @@ class UserController {
     async getAll(req, res, next) {
         try {
             const users = await User.findAll();
+            users.map((user) => delete user.dataValues.password);
 
             return res.json(users);
         } catch (error) {
