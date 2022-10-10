@@ -1,11 +1,15 @@
-const { Basket } = require('../models/models');
+const { Basket, Device, Brand } = require('../models/models');
 const ApiError = require('../error/ApiError');
 
 class BasketController {
     async getBasket(req, res, next) {
         try {
             const userId = req.userId;
-            const basket = await Basket.findAll({ where: { userId }, order: [['id', 'ASC']] });
+            const basket = await Basket.findAll({
+                where: { userId },
+                include: { model: Device, include: { model: Brand } },
+                order: [['id', 'ASC']],
+            });
 
             return res.json(basket);
         } catch (error) {
