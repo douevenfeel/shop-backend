@@ -41,9 +41,6 @@ class OrderController {
             page = page || 1;
             limit = limit || 6;
             let offset = page * limit - limit;
-            if (!!canceled === true && !!delivered === true) {
-                return next(ApiError.badRequest('error'));
-            }
             const params = {};
             if (canceled !== undefined) {
                 params.canceled = canceled;
@@ -75,9 +72,6 @@ class OrderController {
             page = page || 1;
             limit = limit || 6;
             let offset = page * limit - limit;
-            if (!!canceled === true && !!delivered === true) {
-                return next(ApiError.badRequest('error'));
-            }
             const params = { hidden: false, userId };
             if (canceled !== undefined) {
                 params.canceled = canceled;
