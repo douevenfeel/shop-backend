@@ -20,13 +20,15 @@ class OrderController {
             });
             basket.forEach(async (device) => {
                 const findedDevice = await Device.findOne({ where: { id: device.deviceId } });
-                await OrderDevice.create({
-                    orderId: order.id,
-                    deviceId: findedDevice.id,
-                    count: device.count,
-                    price: findedDevice.price,
-                });
-                await Basket.destroy({ where: { userId, deviceId: findedDevice.id } });
+                if (findedDevice.dataValues.available) {
+                    await OrderDevice.create({
+                        orderId: order.id,
+                        deviceId: findedDevice.id,
+                        count: device.count,
+                        price: findedDevice.price,
+                    });
+                    await Basket.destroy({ where: { userId, deviceId: findedDevice.id } });
+                }
             });
 
             return res.json(order);
@@ -70,7 +72,7 @@ class OrderController {
             const userId = req.userId;
             let { limit, page, canceled, delivered } = req.query;
             page = page || 1;
-            limit = limit || 6;
+            limit = limit || 8;
             let offset = page * limit - limit;
             const params = { hidden: false, userId };
             if (canceled !== undefined) {
