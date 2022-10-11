@@ -43,9 +43,6 @@ const Basket = sequelize.define('basket', {
 
 const Order = sequelize.define('order', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    address: { type: DataTypes.STRING },
-    receiverFirstName: { type: DataTypes.STRING },
-    receiverLastName: { type: DataTypes.STRING },
     orderDate: { type: DataTypes.DATE },
     deliveryDate: { type: DataTypes.DATE },
     delivered: { type: DataTypes.BOOLEAN, defaultValue: false },

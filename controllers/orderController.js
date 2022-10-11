@@ -1,26 +1,19 @@
 const ApiError = require('../error/ApiError');
-const { User, Device, Order, OrderDevice, Basket } = require('../models/models');
+const { User, Device, Order, OrderDevice, Basket, Brand } = require('../models/models');
 
 class OrderController {
     async create(req, res, next) {
         try {
-            let { receiverFirstName, receiverLastName } = req.body;
-            const { address } = req.body;
             const userId = req.userId;
             const user = await User.findOne({ where: { id: userId } });
             const basket = await Basket.findAll({ where: { userId: user.id, selected: true } });
             if (basket.length === 0) {
                 return res.json({ message: 'empty basket' });
             }
-            receiverFirstName = receiverFirstName || user.firstName;
-            receiverLastName = receiverLastName || user.lastName;
             const orderDate = new Date();
             let deliveryDate = new Date();
             deliveryDate = deliveryDate.setDate(deliveryDate.getDate() + 2);
             let order = await Order.create({
-                address,
-                receiverFirstName,
-                receiverLastName,
                 userId: user.id,
                 orderDate: orderDate,
                 deliveryDate,
@@ -111,7 +104,10 @@ class OrderController {
         try {
             const userId = req.userId;
             const { id } = req.params;
-            const order = await Order.findOne({ where: { id, userId }, include: { model: OrderDevice } });
+            const order = await Order.findOne({
+                where: { id, userId },
+                include: { model: OrderDevice, include: { model: Device, include: { model: Brand } } },
+            });
             if (!order || order.hidden) {
                 return next(ApiError.badRequest("order doesn't exist"));
             }
