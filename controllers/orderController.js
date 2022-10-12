@@ -70,9 +70,9 @@ class OrderController {
     async getAll(req, res, next) {
         try {
             const userId = req.userId;
-            let { limit, page, canceled, delivered } = req.query;
+            let { page, canceled, delivered } = req.query;
+            const limit = 8;
             page = page || 1;
-            limit = limit || 8;
             let offset = page * limit - limit;
             const params = { hidden: false, userId };
             if (canceled !== undefined) {

@@ -35,9 +35,9 @@ class DeviceController {
 
     async getAll(req, res, next) {
         try {
-            let { page, limit, order, brandTitle } = req.query;
+            let { page, order, brandTitle } = req.query;
+            const limit = 12;
             page = page || 1;
-            limit = limit || 12;
             order = [['available', 'DESC'], order];
             let offset = page * limit - limit;
             let devices;
@@ -203,23 +203,6 @@ class DeviceController {
             category.save();
 
             return res.json({ message: 'info category title updated' });
-        } catch (error) {
-            next(ApiError.badRequest(error.message));
-        }
-    }
-
-    async remove(req, res, next) {
-        try {
-            const { id } = req.body;
-            const category = await Category.findAll({ where: { deviceId: id } });
-            category.length !== 0 &&
-                category.forEach(async (ic) => {
-                    await Info.destroy({ where: { categoryId: ic.id } });
-                });
-            await Category.destroy({ where: { deviceId: id } });
-            await Device.destroy({ where: { id } });
-
-            return res.json({ message: 'Товар удален' });
         } catch (error) {
             next(ApiError.badRequest(error.message));
         }

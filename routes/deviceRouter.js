@@ -18,7 +18,6 @@ router.put('/update-discount', authMiddleware, checkRoleMiddleware('ADMIN'), dev
 router.put('/remove-discount', authMiddleware, checkRoleMiddleware('ADMIN'), deviceController.removeDiscount);
 router.put('/category', authMiddleware, checkRoleMiddleware('ADMIN'), deviceController.updateCategoryTitle);
 
-router.delete('/', authMiddleware, checkRoleMiddleware('ADMIN'), deviceController.remove);
 router.delete('/category', authMiddleware, checkRoleMiddleware('ADMIN'), deviceController.removeCategory);
 router.delete('/category/info', authMiddleware, checkRoleMiddleware('ADMIN'), deviceController.removeInfo);
 
