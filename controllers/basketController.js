@@ -49,7 +49,8 @@ class BasketController {
 
                 return res.json({ message: 'device deleted from the basket' });
             }
-            await Basket.update({ count }, { where: { userId, deviceId } });
+            basket.count = count;
+            basket.save();
 
             return res.json({ message: "device's count changed" });
         } catch (error) {
@@ -65,7 +66,8 @@ class BasketController {
             if (!basket) {
                 return res.json({ message: 'no device in the basket' });
             }
-            await Basket.update({ selected }, { where: { userId, deviceId } });
+            basket.selected = selected;
+            basket.save();
 
             return res.json({ message: 'device deleted from selected' });
         } catch (error) {

@@ -43,8 +43,7 @@ class UserController {
 
     async updateRole(req, res, next) {
         try {
-            const { id } = req.params;
-            const { role } = req.body;
+            const { id, role } = req.body;
             await User.update({ role }, { where: { id } });
 
             return res.json({ message: "user's role changed" });

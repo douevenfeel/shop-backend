@@ -75,6 +75,9 @@ class DeviceController {
                 where: { id },
                 include: [{ model: Brand }, { model: Category, include: { model: Info } }],
             });
+            if (!device) {
+                return next(ApiError.badRequest("device doesn't exist"));
+            }
 
             return res.json(device);
         } catch (error) {
@@ -82,10 +85,13 @@ class DeviceController {
         }
     }
 
-    async addCategory(req, res, next) {
+    async createCategory(req, res, next) {
         try {
-            const { deviceId } = req.params;
-            const { categoryTitle } = req.body;
+            const { deviceId, categoryTitle } = req.body;
+            const device = await Device.findOne({ where: { id: deviceId } });
+            if (!device) {
+                return next(ApiError.badRequest("device doesn't exist"));
+            }
             const category = await Category.create({ deviceId, title: categoryTitle });
 
             return res.json(category);
@@ -94,10 +100,13 @@ class DeviceController {
         }
     }
 
-    async addInfo(req, res, next) {
+    async createInfo(req, res, next) {
         try {
-            const { categoryId } = req.params;
-            const { title, content } = req.body;
+            const { categoryId, title, content } = req.body;
+            const category = await Category.findOne({ where: { id: categoryId } });
+            if (!category) {
+                return next(ApiError.badRequest("category doesn't exist"));
+            }
             const info = await Info.create({ title, content, categoryId });
 
             return res.json(info);
@@ -108,11 +117,15 @@ class DeviceController {
 
     async updateAvailable(req, res, next) {
         try {
-            const { id } = req.params;
-            const { available } = req.body;
-            await Device.update({ available: available }, { where: { id } });
+            const { id, available } = req.body;
+            const device = await Device.findOne({ where: { id } });
+            if (!device) {
+                return next(ApiError.badRequest("device doesn't exist"));
+            }
+            device.available = available;
+            device.save();
 
-            return res.json({ message: 'Доступность товара изменена' });
+            return res.json({ message: "device's available updated" });
         } catch (error) {
             next(ApiError.badRequest(error.message));
         }
@@ -120,24 +133,19 @@ class DeviceController {
 
     async updatePrice(req, res, next) {
         try {
-            const { id } = req.params;
-            const { price } = req.body;
-            await Device.update({ price: price }, { where: { id } });
-
-            return res.json({ message: 'Стоимость товара обновлена' });
-        } catch (error) {
-            next(ApiError.badRequest(error.message));
-        }
-    }
-
-    async addDiscount(req, res, next) {
-        try {
-            const { id } = req.params;
-            const { price } = req.body;
+            const { id, price } = req.body;
             const device = await Device.findOne({ where: { id } });
-            await Device.update({ price, oldPrice: device.price }, { where: { id } });
+            if (!device) {
+                return next(ApiError.badRequest("device doesn't exist"));
+            }
+            if (device.oldPrice === 0) {
+                device.price = price;
+            } else {
+                device.oldPrice = price;
+            }
+            device.save();
 
-            return res.json({ message: 'device discount added' });
+            return res.json({ message: "device's price updated" });
         } catch (error) {
             next(ApiError.badRequest(error.message));
         }
@@ -145,9 +153,18 @@ class DeviceController {
 
     async updateDiscount(req, res, next) {
         try {
-            const { id } = req.params;
-            const { price } = req.body;
-            await Device.update({ price }, { where: { id } });
+            const { id, price } = req.body;
+            const device = await Device.findOne({ where: { id } });
+            if (!device) {
+                return next(ApiError.badRequest("device doesn't exist"));
+            }
+            if (device.oldPrice === 0) {
+                device.oldPrice = device.price;
+                device.price = price;
+            } else {
+                device.price = price;
+            }
+            device.save();
 
             return res.json({ message: 'device discount updated' });
         } catch (error) {
@@ -157,9 +174,17 @@ class DeviceController {
 
     async removeDiscount(req, res, next) {
         try {
-            const { id } = req.params;
+            const { id } = req.body;
             const device = await Device.findOne({ where: { id } });
-            await Device.update({ price: device.oldPrice, oldPrice: 0 }, { where: { id } });
+            if (!device) {
+                return next(ApiError.badRequest("device doesn't exist"));
+            }
+            if (device.oldPrice === 0) {
+                return next(ApiError.badRequest("device doesn't have discount"));
+            }
+            device.price = device.oldPrice;
+            device.oldPrice = 0;
+            device.save();
 
             return res.json({ message: 'device discount removed' });
         } catch (error) {
@@ -169,9 +194,13 @@ class DeviceController {
 
     async updateCategoryTitle(req, res, next) {
         try {
-            const { categoryId } = req.params;
-            const { categoryTitle } = req.body;
-            await Category.update({ title: categoryTitle }, { where: { id: categoryId } });
+            const { id, categoryTitle } = req.body;
+            const category = await Category.findOne({ where: { id } });
+            if (!category) {
+                return next(ApiError.badRequest("category doesn't exist"));
+            }
+            category.title = categoryTitle;
+            category.save();
 
             return res.json({ message: 'info category title updated' });
         } catch (error) {
@@ -181,11 +210,12 @@ class DeviceController {
 
     async remove(req, res, next) {
         try {
-            const { id } = req.params;
+            const { id } = req.body;
             const category = await Category.findAll({ where: { deviceId: id } });
-            category.forEach(async (ic) => {
-                await Info.destroy({ where: { categoryId: ic.id } });
-            });
+            category.length !== 0 &&
+                category.forEach(async (ic) => {
+                    await Info.destroy({ where: { categoryId: ic.id } });
+                });
             await Category.destroy({ where: { deviceId: id } });
             await Device.destroy({ where: { id } });
 
@@ -197,7 +227,7 @@ class DeviceController {
 
     async removeCategory(req, res, next) {
         try {
-            const { categoryId } = req.params;
+            const { categoryId } = req.body;
             await Info.destroy({ where: { categoryId } });
             await Category.destroy({ where: { id: categoryId } });
 
@@ -209,8 +239,8 @@ class DeviceController {
 
     async removeInfo(req, res, next) {
         try {
-            const { infoId } = req.params;
-            await Info.destroy({ where: { id: infoId } });
+            const { id } = req.body;
+            await Info.destroy({ where: { id } });
 
             return res.json({ message: 'info deleted' });
         } catch (error) {

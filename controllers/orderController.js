@@ -125,7 +125,8 @@ class OrderController {
             if (order.delivered) {
                 return res.json({ message: 'order already delivered' });
             }
-            await Order.update({ canceled: true }, { where: { id } });
+            order.canceled = true;
+            order.save();
 
             return res.json({ message: 'order canceled' });
         } catch (error) {
@@ -143,7 +144,8 @@ class OrderController {
             if (order.canceled) {
                 return res.json({ message: 'order already canceled' });
             }
-            await Order.update({ delivered: true }, { where: { id } });
+            order.delivered = true;
+            order.save();
 
             return res.json({ message: 'order delivered' });
         } catch (error) {
@@ -159,7 +161,8 @@ class OrderController {
             if (!order) {
                 return next(ApiError.badRequest("order doesn't exist"));
             }
-            await Order.update({ hidden: true }, { where: { id } });
+            order.hidden = true;
+            order.save();
 
             return res.json({ message: 'order hidden' });
         } catch (error) {

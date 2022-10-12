@@ -7,6 +7,6 @@ const checkRoleMiddleware = require('../middlewares/checkRoleMiddleware');
 
 router.get('/', authMiddleware, checkRoleMiddleware('ADMIN'), userController.getAll);
 
-router.put('/:id/role', authMiddleware, checkRoleMiddleware('ADMIN'), userController.updateRole);
+router.put('/role', authMiddleware, checkRoleMiddleware('ADMIN'), userController.updateRole);
 
 module.exports = router;
