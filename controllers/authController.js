@@ -80,6 +80,7 @@ class AuthController {
     async refresh(req, res, next) {
         try {
             const { refreshToken } = req.cookies;
+            res.clearCookie('refreshToken');
             if (!refreshToken) {
                 return next(ApiError.unauthorizedError());
             }
