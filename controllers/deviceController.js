@@ -2,11 +2,14 @@ const { Device, Brand, Info, Category } = require('../models/models');
 const uuid = require('uuid');
 const path = require('path');
 const ApiError = require('../error/ApiError');
+const { Op } = require('sequelize');
 
 class DeviceController {
     async create(req, res, next) {
         try {
-            const { brandTitle, title, price, info } = req.body;
+            const { brandTitle, price, info } = req.body;
+            let { title } = req.body;
+            title = `${brandTitle} ${title}`;
             const { image } = req.files;
             let fileName = uuid.v4() + '.png';
             image.mv(path.resolve(__dirname, '..', 'static', fileName));
@@ -35,31 +38,54 @@ class DeviceController {
 
     async getAll(req, res, next) {
         try {
-            let { page, order, brandTitle } = req.query;
+            let { page, order, brandTitle, title } = req.query;
             const limit = 12;
             page = page || 1;
             order = [['available', 'DESC'], order];
             let offset = page * limit - limit;
             let devices;
+            title = title || 'all';
             brandTitle = brandTitle || 'all';
             if (brandTitle !== 'all') {
                 const { id } = await Brand.findOne({ where: { title: brandTitle } });
-                devices = await Device.findAndCountAll({
-                    where: { brandId: id },
-                    order,
-                    page,
-                    limit,
-                    offset,
-                    include: { model: Brand },
-                });
+                if (title !== 'all') {
+                    devices = await Device.findAndCountAll({
+                        where: { brandId: id, title: { [Op.iLike]: `%${title}%` } },
+                        order,
+                        page,
+                        limit,
+                        offset,
+                        include: { model: Brand },
+                    });
+                } else {
+                    devices = await Device.findAndCountAll({
+                        where: { brandId: id },
+                        order,
+                        page,
+                        limit,
+                        offset,
+                        include: { model: Brand },
+                    });
+                }
             } else {
-                devices = await Device.findAndCountAll({
-                    order,
-                    page,
-                    limit,
-                    offset,
-                    include: { model: Brand },
-                });
+                if (title !== 'all') {
+                    devices = await Device.findAndCountAll({
+                        where: { title: { [Op.iLike]: `%${title}%` } },
+                        order,
+                        page,
+                        limit,
+                        offset,
+                        include: { model: Brand },
+                    });
+                } else {
+                    devices = await Device.findAndCountAll({
+                        order,
+                        page,
+                        limit,
+                        offset,
+                        include: { model: Brand },
+                    });
+                }
             }
 
             return res.json(devices);
