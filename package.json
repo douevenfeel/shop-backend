@@ -4,13 +4,17 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "dev": "nodemon index.js"
+        "start": "nodemon index.js"
     },
     "keywords": [],
     "author": "",
     "license": "ISC",
     "dependencies": {
+        "@adminjs/express": "^5.0.1",
+        "@adminjs/sequelize": "^3.0.0",
+        "adminjs": "^6.6.3",
         "bcrypt": "^5.0.1",
+        "connect-pg-simple": "^8.0.0",
         "cookie-parser": "^1.4.6",
         "cors": "^2.8.5",
         "dotenv": "^16.0.2",
