@@ -24,18 +24,9 @@ AdminJS.registerAdapter({
     Database: AdminJSSequelize.Database,
 });
 
-app.use(cors({ credentials: true, origin: process.env.CLIENT_APP_URL }));
-app.use(express.json());
-app.use(cookieParser());
-app.use(express.static(path.resolve(__dirname, 'static')));
-app.use(fileUpload({}));
-app.use('/api', router);
-
-app.use(errorHandler);
-
 const DEFAULT_ADMIN = {
-    email: 'admin@example.com',
-    password: 'password',
+    email: process.env.DEFAULT_ADMIN_EMAIL,
+    password: process.env.DEFAULT_ADMIN_PASSWORD,
 };
 
 const authenticate = async (email, password) => {
@@ -45,45 +36,54 @@ const authenticate = async (email, password) => {
     return null;
 };
 
+const adminOptions = { resources: [User, Token, Device, Brand, Category, Info, Basket, Order, OrderDevice] };
+const admin = new AdminJS(adminOptions);
+
+const ConnectSession = Connect(session);
+const sessionStore = new ConnectSession({
+    conObject: {
+        connectionString: `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
+        ssl: false,
+    },
+    tableName: 'session',
+    createTableIfMissing: true,
+});
+
+const adminRouter = AdminJSExpress.buildAuthenticatedRouter(
+    admin,
+    {
+        authenticate,
+        cookieName: 'adminjs',
+        cookiePassword: 'sessionsecret',
+    },
+    null,
+    {
+        store: sessionStore,
+        resave: true,
+        saveUninitialized: true,
+        secret: 'sessionsecret',
+        cookie: {
+            httpOnly: process.env.NODE_ENV === 'production',
+            secure: process.env.NODE_ENV === 'production',
+        },
+        name: 'adminjs',
+    }
+);
+app.use(admin.options.rootPath, adminRouter);
+
+app.use(cors({ credentials: true, origin: process.env.CLIENT_APP_URL }));
+app.use(express.json());
+app.use(cookieParser());
+app.use(express.static(path.resolve(__dirname, 'static')));
+app.use(fileUpload({}));
+app.use('/api', router);
+
+app.use(errorHandler);
+
 const start = async () => {
     try {
         await sequelize.authenticate();
         await sequelize.sync();
-
-        const adminOptions = { resources: [User, Token, Device, Brand, Category, Info, Basket, Order, OrderDevice] };
-        const admin = new AdminJS(adminOptions);
-
-        const ConnectSession = Connect(session);
-        const sessionStore = new ConnectSession({
-            conObject: {
-                connectionString: `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
-                ssl: false,
-            },
-            tableName: 'session',
-            createTableIfMissing: true,
-        });
-
-        const adminRouter = AdminJSExpress.buildAuthenticatedRouter(
-            admin,
-            {
-                authenticate,
-                cookieName: 'adminjs',
-                cookiePassword: 'sessionsecret',
-            },
-            null,
-            {
-                store: sessionStore,
-                resave: true,
-                saveUninitialized: true,
-                secret: 'sessionsecret',
-                cookie: {
-                    httpOnly: process.env.NODE_ENV === 'production',
-                    secure: process.env.NODE_ENV === 'production',
-                },
-                name: 'adminjs',
-            }
-        );
-        app.use(admin.options.rootPath, adminRouter);
 
         app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
     } catch (error) {
