@@ -38,7 +38,7 @@ class DeviceController {
 
     async getAll(req, res, next) {
         try {
-            let { page, order, brandTitle, title } = req.query;
+            let { page, order, brandTitle, title, fromPrice, toPrice } = req.query;
             const limit = 12;
             page = page || 1;
             order = [['available', 'DESC'], order];
@@ -46,11 +46,16 @@ class DeviceController {
             let devices;
             title = title || 'all';
             brandTitle = brandTitle || 'all';
+            fromPrice = +fromPrice;
+            toPrice = +toPrice !== 0 ? toPrice : Number.MAX_SAFE_INTEGER;
             if (brandTitle !== 'all') {
                 const { id } = await Brand.findOne({ where: { title: brandTitle } });
                 if (title !== 'all') {
                     devices = await Device.findAndCountAll({
-                        where: { brandId: id, title: { [Op.iLike]: `%${title}%` } },
+                        where: {
+                            brandId: id,
+                            title: { [Op.iLike]: `%${title}%`, price: { [Op.between]: [fromPrice, toPrice] } },
+                        },
                         order,
                         page,
                         limit,
@@ -59,7 +64,7 @@ class DeviceController {
                     });
                 } else {
                     devices = await Device.findAndCountAll({
-                        where: { brandId: id },
+                        where: { brandId: id, price: { [Op.between]: [fromPrice, toPrice] } },
                         order,
                         page,
                         limit,
@@ -70,7 +75,7 @@ class DeviceController {
             } else {
                 if (title !== 'all') {
                     devices = await Device.findAndCountAll({
-                        where: { title: { [Op.iLike]: `%${title}%` } },
+                        where: { title: { [Op.iLike]: `%${title}%`, price: { [Op.between]: [fromPrice, toPrice] } } },
                         order,
                         page,
                         limit,
@@ -79,6 +84,7 @@ class DeviceController {
                     });
                 } else {
                     devices = await Device.findAndCountAll({
+                        where: { price: { [Op.between]: [fromPrice, toPrice] } },
                         order,
                         page,
                         limit,
