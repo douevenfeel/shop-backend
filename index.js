@@ -34,8 +34,8 @@ app.use('/api', router);
 app.use(errorHandler);
 
 const DEFAULT_ADMIN = {
-    email: 'admin@example.com',
-    password: 'password',
+    email: process.env.DEFAULT_ADMIN_EMAIL,
+    password: process.env.DEFAULT_ADMIN_PASSWORD,
 };
 
 const authenticate = async (email, password) => {
