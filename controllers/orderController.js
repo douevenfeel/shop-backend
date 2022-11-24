@@ -37,9 +37,9 @@ class OrderController {
 
     async getAllManager(req, res, next) {
         try {
-            let { limit, page, canceled, delivered, userId } = req.query;
+            let { page, canceled, delivered, userId, dateFrom, dateTo } = req.query;
             page = page || 1;
-            limit = limit || 6;
+            limit = 12;
             let offset = page * limit - limit;
             const params = {};
             if (canceled !== undefined) {
@@ -50,6 +50,12 @@ class OrderController {
             }
             if (userId !== undefined) {
                 params.userId = userId;
+            }
+            if (dateFrom !== undefined) {
+                params.dateFrom = dateFrom;
+            }
+            if (dateTo !== undefined) {
+                params.dateTo = dateTo;
             }
             const orders = await Order.findAndCountAll({
                 where: { ...params },
