@@ -19,9 +19,7 @@ const Device = sequelize.define('device', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     title: { type: DataTypes.STRING },
     price: { type: DataTypes.INTEGER },
-    oldPrice: { type: DataTypes.INTEGER, defaultValue: 0 },
     image: { type: DataTypes.STRING },
-    available: { type: DataTypes.BOOLEAN, defaultValue: true },
 });
 
 const Category = sequelize.define('category', {

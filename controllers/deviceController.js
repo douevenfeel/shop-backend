@@ -41,7 +41,7 @@ class DeviceController {
             let { page, order, brandTitle, title, fromPrice, toPrice } = req.query;
             const limit = 12;
             page = page || 1;
-            order = [['available', 'DESC'], order];
+            order = [order];
             let offset = page * limit - limit;
             let devices;
             title = title || 'all';
@@ -148,79 +148,23 @@ class DeviceController {
         }
     }
 
-    async updateAvailable(req, res, next) {
+    async update(req, res, next) {
         try {
-            const { id, available } = req.body;
-            const device = await Device.findOne({ where: { id } });
-            if (!device) {
-                return next(ApiError.badRequest("device doesn't exist"));
+            console.log('ds');
+            const { id, title, price, brandTitle } = req.body;
+            let brand = await Brand.findOne({ where: { title: brandTitle } });
+            const device = await Device.findOne({ where: id });
+            if (!brand) {
+                brand = await Brand.create({ title: brandTitle });
             }
-            device.available = available;
+            device.brandId = brand.dataValues.id;
+            device.title = title;
+            device.price = price;
             device.save();
 
-            return res.json({ message: "device's available updated" });
+            return res.json({ message: 'device updated' });
         } catch (error) {
-            next(ApiError.badRequest(error.message));
-        }
-    }
-
-    async updatePrice(req, res, next) {
-        try {
-            const { id, price } = req.body;
-            const device = await Device.findOne({ where: { id } });
-            if (!device) {
-                return next(ApiError.badRequest("device doesn't exist"));
-            }
-            if (device.oldPrice === 0) {
-                device.price = price;
-            } else {
-                device.oldPrice = price;
-            }
-            device.save();
-
-            return res.json({ message: "device's price updated" });
-        } catch (error) {
-            next(ApiError.badRequest(error.message));
-        }
-    }
-
-    async updateDiscount(req, res, next) {
-        try {
-            const { id, price } = req.body;
-            const device = await Device.findOne({ where: { id } });
-            if (!device) {
-                return next(ApiError.badRequest("device doesn't exist"));
-            }
-            if (device.oldPrice === 0) {
-                device.oldPrice = device.price;
-                device.price = price;
-            } else {
-                device.price = price;
-            }
-            device.save();
-
-            return res.json({ message: 'device discount updated' });
-        } catch (error) {
-            next(ApiError.badRequest(error.message));
-        }
-    }
-
-    async removeDiscount(req, res, next) {
-        try {
-            const { id } = req.body;
-            const device = await Device.findOne({ where: { id } });
-            if (!device) {
-                return next(ApiError.badRequest("device doesn't exist"));
-            }
-            if (device.oldPrice === 0) {
-                return next(ApiError.badRequest("device doesn't have discount"));
-            }
-            device.price = device.oldPrice;
-            device.oldPrice = 0;
-            device.save();
-
-            return res.json({ message: 'device discount removed' });
-        } catch (error) {
+            console.log(error);
             next(ApiError.badRequest(error.message));
         }
     }
@@ -248,6 +192,20 @@ class DeviceController {
             await Category.destroy({ where: { id: categoryId } });
 
             return res.json({ message: 'info category deleted' });
+        } catch (error) {
+            next(ApiError.badRequest(error.message));
+        }
+    }
+
+    async updateInfo(req, res, next) {
+        try {
+            const { id, title, content } = req.body;
+            const info = await Info.findOne({ where: { id } });
+            info.title = title;
+            info.content = content;
+            info.save();
+
+            return res.json({ message: 'info updated' });
         } catch (error) {
             next(ApiError.badRequest(error.message));
         }

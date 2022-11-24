@@ -12,11 +12,9 @@ router.post('/', authMiddleware, checkRoleMiddleware('ADMIN'), deviceController.
 router.post('/category', authMiddleware, checkRoleMiddleware('ADMIN'), deviceController.createCategory);
 router.post('/category/info', authMiddleware, checkRoleMiddleware('ADMIN'), deviceController.createInfo);
 
-router.put('/available', authMiddleware, checkRoleMiddleware('ADMIN'), deviceController.updateAvailable);
-router.put('/update-price', authMiddleware, checkRoleMiddleware('ADMIN'), deviceController.updatePrice);
-router.put('/update-discount', authMiddleware, checkRoleMiddleware('ADMIN'), deviceController.updateDiscount);
-router.put('/remove-discount', authMiddleware, checkRoleMiddleware('ADMIN'), deviceController.removeDiscount);
+router.put('/update', authMiddleware, checkRoleMiddleware('ADMIN'), deviceController.update);
 router.put('/category', authMiddleware, checkRoleMiddleware('ADMIN'), deviceController.updateCategoryTitle);
+router.put('/category/info', authMiddleware, checkRoleMiddleware('ADMIN'), deviceController.updateInfo);
 
 router.delete('/category', authMiddleware, checkRoleMiddleware('ADMIN'), deviceController.removeCategory);
 router.delete('/category/info', authMiddleware, checkRoleMiddleware('ADMIN'), deviceController.removeInfo);

@@ -20,15 +20,13 @@ class OrderController {
             });
             basket.forEach(async (device) => {
                 const findedDevice = await Device.findOne({ where: { id: device.deviceId } });
-                if (findedDevice.dataValues.available) {
-                    await OrderDevice.create({
-                        orderId: order.id,
-                        deviceId: findedDevice.id,
-                        count: device.count,
-                        price: findedDevice.price,
-                    });
-                    await Basket.destroy({ where: { userId, deviceId: findedDevice.id } });
-                }
+                await OrderDevice.create({
+                    orderId: order.id,
+                    deviceId: findedDevice.id,
+                    count: device.count,
+                    price: findedDevice.price,
+                });
+                await Basket.destroy({ where: { userId, deviceId: findedDevice.id } });
             });
 
             return res.json(order);
