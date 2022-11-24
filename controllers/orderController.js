@@ -35,7 +35,7 @@ class OrderController {
         }
     }
 
-    async getAllAdmin(req, res, next) {
+    async getAllManager(req, res, next) {
         try {
             let { limit, page, canceled, delivered, userId } = req.query;
             page = page || 1;

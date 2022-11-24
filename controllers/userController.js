@@ -3,28 +3,28 @@ const ApiError = require('../error/ApiError');
 const { User } = require('../models/models');
 
 class UserController {
-    async createAdmin(req, res, next) {
+    async createManager(req, res, next) {
         try {
             const user = await User.findOne({
                 where: {
-                    email: process.env.ADMIN_EMAIL,
-                    firstName: process.env.ADMIN_FIRSTNAME,
-                    lastName: process.env.ADMIN_LASTNAME,
-                    role: 'ADMIN',
+                    email: process.env.MANAGER_EMAIL,
+                    firstName: process.env.MANAGER_FIRSTNAME,
+                    lastName: process.env.MANAGER_LASTNAME,
+                    role: 'MANAGER',
                 },
             });
             if (user) {
                 return res.json('hello world');
             }
             await User.create({
-                email: process.env.ADMIN_EMAIL,
-                password: await bcrypt.hash(process.env.ADMIN_PASSWORD, 5),
-                firstName: process.env.ADMIN_FIRSTNAME,
-                lastName: process.env.ADMIN_LASTNAME,
-                role: 'ADMIN',
+                email: process.env.MANAGER_EMAIL,
+                password: await bcrypt.hash(process.env.MANAGER_PASSWORD, 5),
+                firstName: process.env.MANAGER_FIRSTNAME,
+                lastName: process.env.MANAGER_LASTNAME,
+                role: 'MANAGER',
             });
 
-            return res.json('admin created');
+            return res.json('manager created');
         } catch (error) {
             next(ApiError.badRequest(error.message));
         }

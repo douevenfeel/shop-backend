@@ -13,6 +13,6 @@ router.use('/user', userRouter);
 router.use('/device', deviceRouter);
 router.use('/basket', basketRouter);
 router.use('/order', orderRouter);
-router.use('/', userController.createAdmin)
+router.use('/', userController.createManager)
 
 module.exports = router;
