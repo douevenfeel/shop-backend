@@ -54,7 +54,8 @@ class DeviceController {
                     devices = await Device.findAndCountAll({
                         where: {
                             brandId: id,
-                            title: { [Op.iLike]: `%${title}%`, price: { [Op.between]: [fromPrice, toPrice] } },
+                            title: { [Op.iLike]: `%${title}%` },
+                            price: { [Op.between]: [fromPrice, toPrice] },
                         },
                         order,
                         page,
@@ -75,7 +76,7 @@ class DeviceController {
             } else {
                 if (title !== 'all') {
                     devices = await Device.findAndCountAll({
-                        where: { title: { [Op.iLike]: `%${title}%`, price: { [Op.between]: [fromPrice, toPrice] } } },
+                        where: { title: { [Op.iLike]: `%${title}%` }, price: { [Op.between]: [fromPrice, toPrice] } },
                         order,
                         page,
                         limit,
