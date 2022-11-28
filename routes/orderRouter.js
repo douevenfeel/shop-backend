@@ -6,6 +6,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
 const checkRoleMiddleware = require('../middlewares/checkRoleMiddleware');
 
 router.get('/', authMiddleware, checkRoleMiddleware('MANAGER'), orderController.getAllManager);
+router.put('/status', authMiddleware, checkRoleMiddleware('MANAGER'), orderController.deliveryStatusManager);
 
 router.get('/all', authMiddleware, orderController.getAll);
 router.get('/:id', authMiddleware, orderController.getOne);

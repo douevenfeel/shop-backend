@@ -39,7 +39,7 @@ class OrderController {
         try {
             let { page, canceled, delivered, userId, dateFrom, dateTo } = req.query;
             page = page || 1;
-            limit = 12;
+            const limit = 12;
             let offset = page * limit - limit;
             const params = {};
             if (canceled !== undefined) {
@@ -113,6 +113,36 @@ class OrderController {
             }
 
             return res.json(order);
+        } catch (error) {
+            next(ApiError.badRequest(error.message));
+        }
+    }
+
+    async deliveryStatusManager(req, res, next) {
+        try {
+            const { id, status } = req.body;
+            console.log(id, status);
+            const order = await Order.findOne({ where: { id } });
+            if (status === 'in delivery') {
+                if (order.canceled || order.delivered) {
+                    let deliveryDate = new Date();
+                    deliveryDate = deliveryDate.setDate(deliveryDate.getDate() + 2);
+                    order.deliveryDate = deliveryDate;
+                }
+                order.delivered = false;
+                order.canceled = false;
+            } else if (status === 'delivered') {
+                order.delivered = true;
+                order.canceled = false;
+                let deliveryDate = new Date();
+                order.deliveryDate = deliveryDate;
+            } else {
+                order.delivered = false;
+                order.canceled = true;
+            }
+            order.save();
+
+            return res.json({ message: "order's status changed" });
         } catch (error) {
             next(ApiError.badRequest(error.message));
         }
