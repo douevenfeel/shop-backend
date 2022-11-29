@@ -39,7 +39,7 @@ class OrderController {
         try {
             let { page, canceled, delivered, userId, dateFrom, dateTo } = req.query;
             page = page || 1;
-            const limit = 12;
+            const limit = 8;
             let offset = page * limit - limit;
             const params = {};
             if (canceled !== undefined) {
@@ -59,6 +59,7 @@ class OrderController {
             }
             const orders = await Order.findAndCountAll({
                 where: { ...params },
+                include: { model: User },
                 order: [['orderDate', 'DESC']],
                 page,
                 limit,
@@ -88,6 +89,7 @@ class OrderController {
 
             const orders = await Order.findAndCountAll({
                 where: { ...params },
+                include: { model: User },
                 order: [['orderDate', 'DESC']],
                 page,
                 limit,
@@ -104,12 +106,27 @@ class OrderController {
         try {
             const userId = req.userId;
             const { id } = req.params;
-            const order = await Order.findOne({
-                where: { id, userId },
-                include: { model: OrderDevice, include: { model: Device, include: { model: Brand } } },
-            });
-            if (!order || order.hidden) {
-                return next(ApiError.badRequest("order doesn't exist"));
+            const user = await User.findOne({ where: { id: userId } });
+            let order;
+            if (user.role === 'MANAGER') {
+                order = await Order.findOne({
+                    where: { id },
+                    include: [
+                        { model: OrderDevice, include: { model: Device, include: { model: Brand } } },
+                        { model: User },
+                    ],
+                });
+                if (!order) {
+                    return next(ApiError.badRequest("order doesn't exist"));
+                }
+            } else {
+                order = await Order.findOne({
+                    where: { id, userId },
+                    include: { model: OrderDevice, include: { model: Device, include: { model: Brand } } },
+                });
+                if (!order || order.hidden) {
+                    return next(ApiError.badRequest("order doesn't exist"));
+                }
             }
 
             return res.json(order);
