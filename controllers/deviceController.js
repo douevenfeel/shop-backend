@@ -2,7 +2,7 @@ const { Device, Brand, Info, Category } = require('../models/models');
 const uuid = require('uuid');
 const path = require('path');
 const ApiError = require('../error/ApiError');
-const { Op, INTEGER } = require('sequelize');
+const { Op } = require('sequelize');
 
 class DeviceController {
     async create(req, res, next) {
