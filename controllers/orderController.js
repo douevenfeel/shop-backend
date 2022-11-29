@@ -1,3 +1,4 @@
+const { Op } = require('sequelize');
 const ApiError = require('../error/ApiError');
 const { User, Device, Order, OrderDevice, Basket, Brand } = require('../models/models');
 
@@ -51,14 +52,18 @@ class OrderController {
             if (userId !== undefined) {
                 params.userId = userId;
             }
-            if (dateFrom !== undefined) {
-                params.dateFrom = dateFrom;
+            if (dateTo) {
+                dateTo += 'T23:59:59.999Z';
+            } else {
+                dateTo = new Date();
             }
-            if (dateTo !== undefined) {
-                params.dateTo = dateTo;
+            if (dateFrom) {
+                dateFrom += 'T00:00:00.000Z';
+            } else {
+                dateFrom = '1970-01-01T00:00:00.000Z';
             }
             const orders = await Order.findAndCountAll({
-                where: { ...params },
+                where: { ...params, orderDate: { [Op.between]: [dateFrom, dateTo] } },
                 include: { model: User },
                 order: [['orderDate', 'DESC']],
                 page,
