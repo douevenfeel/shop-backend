@@ -2,7 +2,7 @@ const { Device, Brand, Info, Category } = require('../models/models');
 const uuid = require('uuid');
 const path = require('path');
 const ApiError = require('../error/ApiError');
-const { Op } = require('sequelize');
+const { Op, INTEGER } = require('sequelize');
 
 class DeviceController {
     async create(req, res, next) {
@@ -94,8 +94,19 @@ class DeviceController {
                     });
                 }
             }
+            let minPrice = Number.MAX_SAFE_INTEGER;
+            let maxPrice = 0;
+            devices.rows.forEach((device) => {
+                minPrice = Math.min(device.price, minPrice);
+                maxPrice = Math.max(device.price, maxPrice);
+                return device.price;
+            });
 
-            return res.json(devices);
+            if (minPrice === Number.MAX_SAFE_INTEGER) {
+                minPrice = 0;
+            }
+
+            return res.json({ ...devices, minPrice, maxPrice });
         } catch (error) {
             next(ApiError.badRequest(error.message));
         }
