@@ -53,7 +53,7 @@ class OrderController {
                 params.userId = userId;
             }
             if (dateTo) {
-                dateTo += 'T23:59:59.999Z';
+                dateTo += 'T20:59:59.999Z';
             } else {
                 dateTo = new Date();
             }
