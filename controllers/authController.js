@@ -80,13 +80,14 @@ class AuthController {
     async refresh(req, res, next) {
         try {
             const { refreshToken } = req.cookies;
-            res.clearCookie('refreshToken');
             if (!refreshToken) {
+                res.clearCookie('refreshToken');
                 return next(ApiError.unauthorizedError());
             }
             const validToken = tokenService.validateRefreshToken(refreshToken);
             const findedToken = await tokenService.findToken(refreshToken);
             if (!validToken || !findedToken) {
+                res.clearCookie('refreshToken');
                 return next(ApiError.unauthorizedError());
             }
             const user = await User.findOne({ where: { id: validToken.id } });
