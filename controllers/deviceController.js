@@ -2,7 +2,7 @@ const { Device, Brand, Info, Category } = require('../models/models');
 const uuid = require('uuid');
 const path = require('path');
 const ApiError = require('../error/ApiError');
-const { Op } = require('sequelize');
+const { Op, NUMBER } = require('sequelize');
 
 class DeviceController {
     async create(req, res, next) {
@@ -41,13 +41,18 @@ class DeviceController {
             let { page, order, brandTitle, title, fromPrice, toPrice } = req.query;
             const limit = 12;
             page = page || 1;
+            if (!!order) {
+                order = [order];
+            } else {
+                order = [['image', 'DESC']];
+            }
             order = [order];
             let offset = page * limit - limit;
             let devices;
             title = title || 'all';
             brandTitle = brandTitle || 'all';
-            fromPrice = +fromPrice;
-            toPrice = +toPrice !== 0 ? toPrice : Number.MAX_SAFE_INTEGER;
+            fromPrice = +fromPrice || 0;
+            toPrice = +toPrice === 0 || !toPrice ? Number.MAX_SAFE_INTEGER : toPrice;
             if (brandTitle !== 'all') {
                 const { id } = await Brand.findOne({ where: { title: brandTitle } });
                 if (title !== 'all') {
